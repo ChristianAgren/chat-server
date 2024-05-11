@@ -50,7 +50,7 @@ func (m *WebsocketManager) routeEvent(e WebsocketEvent, c *WebsocketClient) erro
 	}
 }
 
-func (m *WebsocketManager) handleWebSocketConnection(w http.ResponseWriter, r *http.Request) {
+func (m *WebsocketManager) connect(w http.ResponseWriter, r *http.Request) {
 	log.Println("New connection")
 
 	conn, err := websocketUpgrader.Upgrade(w, r, nil)

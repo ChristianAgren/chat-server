@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
@@ -13,16 +14,19 @@ var (
 	pingInterval = (pongWait * 9) / 10
 )
 
-type WebsocketClientMap map[*WebsocketClient]bool
+type WebsocketClientMap map[uuid.UUID]*WebsocketClient
 
 type WebsocketClient struct {
-	connection *websocket.Conn
+	id         uuid.UUID
 	manager    *WebsocketManager
-	egress     chan WebsocketEvent
+	connection *websocket.Conn
+
+	egress chan WebsocketEvent
 }
 
-func NewWebsocketClient(c *websocket.Conn, m *WebsocketManager) *WebsocketClient {
+func NewWebsocketClient(m *WebsocketManager, c *websocket.Conn) *WebsocketClient {
 	client := &WebsocketClient{
+		id:         uuid.New(),
 		connection: c,
 		manager:    m,
 		egress:     make(chan WebsocketEvent),

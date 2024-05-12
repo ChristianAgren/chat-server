@@ -3,21 +3,24 @@ package main
 import (
 	"log"
 	"net/http"
+
+	"github.com/go-playground/validator/v10"
 	// "github.com/gorilla/mux"
 )
 
 type APIServer struct {
-	addr string
+	addr     string
+	validate *validator.Validate
 }
 
-func NewAPIServer(addr string) *APIServer {
-	return &APIServer{addr: addr}
+func NewAPIServer(addr string, v *validator.Validate) *APIServer {
+	return &APIServer{addr: addr, validate: v}
 }
 
 func (s *APIServer) Serve() {
 	router := http.NewServeMux()
 
-	websocketManager := NewWebsocketManager()
+	websocketManager := NewWebsocketManager(s.validate)
 
 	setupRoutes(router, websocketManager)
 
@@ -31,10 +34,13 @@ func (s *APIServer) Serve() {
 }
 
 func setupRoutes(r *http.ServeMux, wsManager *WebsocketManager) {
-	r.HandleFunc("GET /{$}", handleHomePage)
-	r.HandleFunc("GET /ws", wsManager.connect)
+	r.Handle("GET /{$}", apiHandler(handleHomePage))
+	r.Handle("GET /ws", apiHandler(wsManager.connectNewClient))
+	r.Handle("GET /room/{roomId}", apiHandler(wsManager.getRoom))
+	r.Handle("POST /room", apiHandler(wsManager.createNewRoom))
 }
 
-func handleHomePage(w http.ResponseWriter, r *http.Request) {
+func handleHomePage(w http.ResponseWriter, r *http.Request) (*APISuccess, *APIError) {
 	println("Welcome to Server ", r.RequestURI)
+	return NewAPISuccess(200, ""), nil
 }
